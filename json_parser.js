@@ -71,6 +71,16 @@ function parseString(input){
 }
 
 // 	Test for Number
+function parseNumber(input){
+  let reg = /-?(\d+.)?\d+([eE][+-]?\d+)?/
+  let parseOut = input.match(reg);
+  console.log(parseOut);
+  if(parseOut == null || parseOut[0] == undefined) {
+  	return null;
+  }else{
+    return [parseOut[0], input.slice(parseOut[0].length)];	
+  }  
+}
 
 // 	Test for Object (JSON object)
 // 	Test for Array
@@ -78,7 +88,7 @@ function parseString(input){
 //	Test for function
 //	Test for date
 //	Test for undefined
-console.log(parseString("\"efg\n\"abcd"));
-
+//console.log(parseString("\"efg\n\"abcd"));
+console.log(parseNumber("-1.-E-1"));
 
 //}
