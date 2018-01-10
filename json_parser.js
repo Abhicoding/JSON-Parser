@@ -60,16 +60,15 @@ function parseBoolean(input){
 
 //	Test for String
 function parseString(input){
-  let reg = /\"(.*?|\\)\"/;
+  let reg = /\"([^"]*)\"/;
   let parseOut = input.match(reg);
-  //console.log(parseOut, parseOut == null, Number(parseOut.index) !== 0);
+  console.log(parseOut);
   if(parseOut == null || Number(parseOut.index) !== 0) {
   	return null;
   }else{
   return [parseOut[1], input.slice(parseOut[1].length+2)];	
   }  
 }
- 
 
 // 	Test for Number
 
@@ -79,7 +78,7 @@ function parseString(input){
 //	Test for function
 //	Test for date
 //	Test for undefined
-console.log(parseString('"eba\n"'));
+console.log(parseString("\"efg\n\"abcd"));
 
 
 //}
