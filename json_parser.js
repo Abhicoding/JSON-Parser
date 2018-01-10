@@ -3,9 +3,13 @@ input is in valid json format*/
 
 //Let's change something to test.
 
-var jsonParse = (function(){
+//var jsonParse = (function(){
+
+"use strict"
  
- )
+ //function main() {
+  //var r_temp = readLine();
+//}
 
 	
 //  Test for null
@@ -13,10 +17,10 @@ function parseNull(input){
 	let x = input.split(''), parseOut;
 	if (x[0] !== 'n'){
 		return null;
-	}else if(length.x < 4){
+	}else if(x.length < 4){
       return null;
     }else{
-        parseOut = [x.slice(0, 4).join('')].concat(x.slice(5).join(''));
+        parseOut = [x.slice(0, 4).join('')].concat(x.slice(4).join(''));
         //console.log(parseOut);
 		if (parseOut[0] == 'null'){			
           return parseOut;
@@ -25,6 +29,8 @@ function parseNull(input){
 		}
 	}
 }
+
+
 
 // 	Test for Boolean
 function parseBoolean(input){
@@ -52,7 +58,19 @@ function parseBoolean(input){
 
 
 
-//	Test for String 
+//	Test for String
+function parseString(input){
+  let reg = /\"(.*?|\\)\"/;
+  let parseOut = input.match(reg);
+  //console.log(parseOut, parseOut == null, Number(parseOut.index) !== 0);
+  if(parseOut == null || Number(parseOut.index) !== 0) {
+  	return null;
+  }else{
+  return [parseOut[1], input.slice(parseOut[1].length+2)];	
+  }  
+}
+ 
+
 // 	Test for Number
 
 // 	Test for Object (JSON object)
@@ -61,6 +79,7 @@ function parseBoolean(input){
 //	Test for function
 //	Test for date
 //	Test for undefined
+console.log(parseString('"eba\n"'));
 
 
-}
+//}
