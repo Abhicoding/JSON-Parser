@@ -108,5 +108,12 @@ function parseSpace (input) {
 
 let arrout = parseArray('[[123]]"-1.-E-1"')
 console.log(arrout)
-console.log(parseBoolean('trueeee'))
+if (parseString(arrout[0]) !== null) {
+  console.log(parseString(arrout[0]))
+} else if (parseNumber(arrout[0]) !== null) {
+  console.log(parseNumber(arrout[0]))
+}
+
+console.log(parseArray('[[123]]"-1.-E-1"'))
+// console.log(parseBoolean('trueeee'))
 // }
