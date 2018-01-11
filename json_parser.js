@@ -29,7 +29,7 @@ function parseNull (input) {
   }
 }
 
-// 	Test for Boolean
+//  Test for Boolean
 function parseBoolean (input) {
   let x = input.split(''), parseOut
   if (x[0] == 't') {
@@ -53,39 +53,39 @@ function parseBoolean (input) {
   }
 }
 
-//	Test for String
+//  Test for String
 function parseString (input) {
   let reg = /\"([^"]*)\"/
   let parseOut = input.match(reg)
   console.log(parseOut)
   if (parseOut == null || Number(parseOut.index) !== 0) {
-  	return null
+    return null
   } else {
     return [parseOut[1], input.slice(parseOut[1].length + 2)]
   }
 }
 
-// 	Test for Number
+//  Test for Number
 function parseNumber (input) {
   let reg = /\"?^(\-?\d+(\.\d+)?([eE][+-]?\d+)?)/
   let parseOut = input.match(reg)
   // console.log(parseOut);
   if (parseOut == null || parseOut[0] == undefined) {
-  	return null
+    return null
   } else {
     return [parseOut[0], input.slice(parseOut[0].length)]
   }
 }
 
-// 	Test for Array
+//  Test for Array
 function parseArray (input) {
-  let reg = /\[(.*?)\]/
+  let reg = /\[(.*)\]/
   let parseOut = input.match(reg)
   // console.log(parseOut);
   if (parseOut == null || parseOut[0] == undefined) {
-  	return null
+    return null
   } else {
-    return [parseOut[1], input.slice(parseOut[0].length)]
+    return [parseOut[1]].concat(input.slice(parseOut[0].length))
   }
 }
 
@@ -93,27 +93,23 @@ function parseSpace (input) {
   let reg = /(^\s*)/
   let parseOut = input.match(reg)
   if (parseOut == null || parseOut[0] == undefined) {
-  	return null
+    return null
   } else if (parseOut[0] == '') {
-  	return null
+    return null
   } else {
-    return [parseOut[0], input.slice(parseOut[0].length)]
+    return [parseOut[1], input.slice(parseOut[0].length)]
   }
 }
-// 	Test for Object (JSON object)
-//	Test for function
-//	Test for date
-//	Test for undefined
+//  Test for Object (JSON object)
+//  Test for function
+//  Test for date
+//  Test for undefined
 // console.log(parseString("\"efg\n\"abcd"));
-
-let arrout = parseArray('[[123]]"-1.-E-1"')
-console.log(arrout)
-if (parseString(arrout[0]) !== null) {
-  console.log(parseString(arrout[0]))
-} else if (parseNumber(arrout[0]) !== null) {
-  console.log(parseNumber(arrout[0]))
-}
-
-console.log(parseArray('[[123]]"-1.-E-1"'))
+let x = parseArray('[[123, "a", [\'a\']]]"-1.-E-1"')
+console.log(x)
+let y = parseArray(x[0])
+console.log(y)
+let z = parseNumber(y[0])
+console.log(z)
 // console.log(parseBoolean('trueeee'))
 // }
