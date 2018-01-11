@@ -79,13 +79,13 @@ function parseNumber (input) {
 
 // 	Test for Array
 function parseArray (input) {
-  let reg = /\[(.*)\]/
+  let reg = /\[(.*?)\]/
   let parseOut = input.match(reg)
   // console.log(parseOut);
   if (parseOut == null || parseOut[0] == undefined) {
   	return null
   } else {
-    return [parseOut[0], input.slice(parseOut[0].length)]
+    return [parseOut[1], input.slice(parseOut[0].length)]
   }
 }
 
@@ -105,6 +105,8 @@ function parseSpace (input) {
 //	Test for date
 //	Test for undefined
 // console.log(parseString("\"efg\n\"abcd"));
-console.log(parseArray('[]"-1.-E-1"'))
+
+let arrout = parseArray('[[123]]"-1.-E-1"')
+console.log(arrout)
 console.log(parseBoolean('trueeee'))
 // }
