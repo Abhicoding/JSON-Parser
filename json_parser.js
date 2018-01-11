@@ -57,7 +57,7 @@ function parseBoolean (input) {
 function parseString (input) {
   let reg = /\"([^"]*)\"/
   let parseOut = input.match(reg)
-  console.log(parseOut)
+  // console.log(parseOut)
   if (parseOut == null || Number(parseOut.index) !== 0) {
     return null
   } else {
@@ -106,10 +106,29 @@ function parseSpace (input) {
 //  Test for undefined
 // console.log(parseString("\"efg\n\"abcd"));
 let x = parseArray('[[123, "a", [\'a\']]]"-1.-E-1"')
-console.log(x)
-let y = parseArray(x[0])
-console.log(y)
-let z = parseNumber(y[0])
-console.log(z)
-// console.log(parseBoolean('trueeee'))
+// console.log(parseNumber(parseArray(x[0])[0]))
+
+function parseCommaSpace (input) {
+  let reg = /(\s+)?\,{1}(\s+)?/
+  let parseOut = input.match(reg)
+  // console.log(parseOut)
+  if (parseOut == null || parseOut[0] == undefined) {
+    return null
+  } else if (parseOut[0] == '') {
+    return null
+  } else {
+    return [parseOut[0], input.slice(parseOut[0].length)]
+  }
+}
+
+// if (parseArray(x[0][0])) {
+  // console.log(parseArray(x[0][0]))
+// console.log(parseNumber(parseArray(x[0][0])[0]))
+// }
+/* if (parseNumber(x[0])) {
+  x = parseArray(x[1])
+  console.log(x)
+} */
+
+console.log(parseCommaSpace(', , abcd'))
 // }
