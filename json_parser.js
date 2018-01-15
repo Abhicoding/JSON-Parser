@@ -8,8 +8,20 @@
 
 // const factoryParser = function
 
-// const parserCollector = [parseNull(), ]
+function factoryParser (args) {
+  return function parser (input) {
+    for (let x in args) {
+      if (args[x](input)) {
+        return args[x](input)
+      }
+    }
+  }
+}
+const valueParser = factoryParser([parseSpace, parseNull, parseBoolean, parseNumber, parseString, parseArray, parseObject])
 
+console.log(valueParser('"my name"'))
+
+/*
 const valueParser = function (input) {
   if (input[0] == 'n') {
     return parseNull(input)
@@ -26,7 +38,7 @@ const valueParser = function (input) {
   } else {
     return null
   }
-}
+} */
 
 function parseNull (input) {
   if (input.slice(0, 4) === 'null') {
@@ -134,7 +146,7 @@ function objectHelper (input) {
 
 // console.log(parseArray('[123]'))
 // console.log(objectHelper('\"123\": "abc", \"12\": \"1\"'))
-console.log(parseObject('\"a\"-12.3e '))
+// console.log(parseObject('\"a\"-12.3e '))
 // console.log(valueParser('truea'))
 // console.log(valueParser('false'))
 // console.log(valueParser('null'))
