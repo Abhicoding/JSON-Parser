@@ -6,7 +6,7 @@
 
 'use strict'
 
-var value = function (input) {
+const valueParser = function (input) {
   if (input[0] == ' ') {
     return null
   } else if (input[0] == 'n') {
@@ -25,110 +25,64 @@ var value = function (input) {
 }
 
 function parseNull (input) {
-  let x = input.split(''), parseOut
-  if (x[0] !== 'n') {
-    return null
-  } else if (x.length < 4) {
-    return null
-  } else {
-    parseOut = [x.slice(0, 4).join('')].concat(x.slice(4).join(''))// console.log(parseOut);
-    if (parseOut[0] == 'null') {
-      return parseOut[1]
-    } else {
-      return null
-    }
-  }
+  if (input.slice(0, 4) === 'null') {
+    return [input.slice(0, 4)].concat(input.slice(4))
+  } else { return null }
 }
 
 function parseBoolean (input) {
-  let x = input, parseOut
-  if (x[0] == 't') {
-    if (x.length < 4) {
-      return null
-    } else {
-      parseOut = x.slice(0, 4)
-      if (parseOut == 'true') {
-        return x.slice(4)
-      }
-    } return null
-  } else if (x[0] == 'f') {
-    if (x.length < 5) {
-      return null
-    } else {
-      parseOut = x.slice(0, 5)
-      if (parseOut == 'false') {
-        return x.slice(5)
-      }
-    } return null
-  }
+  if (input.slice(0, 4) === 'true') {
+    return [input.slice(0, 4)].concat(input.slice(4))
+  } else if (input.slice(0, 5) === 'false') {
+    return [input.slice(0, 5)].concat(input.slice(5))
+  } else { return null }
 }
 
 function parseString (input) {
-  let reg = /\"([^"]*)\"/
-  let parseOut = input.match(reg)// console.log(parseOut)
-  if (parseOut == null || Number(parseOut.index) !== 0) {
-    return null
-  } else {
-    return String(input.slice(parseOut[1].length + 2))
-  }
+  let reg = /\"([^"]*)\"/, parseOut = input.match(reg)
+  if (parseOut) {
+    return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[1].length + 2))
+  } else { return null }
 }
 
 function parseNumber (input) {
-  let reg = /\"?^(\-?\d+(\.\d+)?([eE][+-]?\d+)?)/
-  let parseOut = input.match(reg)// console.log(parseOut[0])
-  if (parseOut == null || parseOut[0] == undefined) {
-    return null
-  } else {
-    return input.slice(parseOut[0].length)
-  }
+  let reg = /\"?^(\-?\d+(\.\d+)?([eE][+-]?\d+)?)/, parseOut = input.match(reg)// console.log(parseOut[0])
+  if (parseOut) {
+    return [parseOut[0]].concat(input.slice(parseOut[0].length))
+  } else { return parseOut }
 }
 
 function parseArray (input) {
-  let reg = /\[(.*)\]/
-  let parseOut = input.match(reg)
-  if (parseOut == null || parseOut[0] == undefined) {
-    return null
-  } else {
+  let reg = /\[(.*)\]/, parseOut = input.match(reg)
+  if (parseOut) {
     if (arrayHelper(parseOut[1])) {
-      return input.slice(parseOut[0].length)
-    } else {
-      return null
+      return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
     }
-  }
+  } else { return null }
 }
 
 function parseSpace (input) {
-  let reg = /(^\s+)/
-  let parseOut = input.match(reg)
-  if (parseOut == null || parseOut[0] == undefined) {
-    return null
-  } else if (parseOut[0] == '') {
-    return null
-  } else {
-    return input.slice(parseOut[0].length)
-  }
+  let reg = /(^\s+)/, parseOut = input.match(reg)
+  if (parseOut) {
+    return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
+  } else { null }
 }
 
 function parseComma (input) {
-  let reg = /^\,/
-  let parseOut = input.match(reg)// console.log(parseOut)
-  if (parseOut == null || parseOut[0] == undefined) {
-    return null
-  } else if (parseOut[0] == '') {
-    return null
-  } else {
-    return input.slice(parseOut[0].length)
+  let reg = /^\,/, parseOut = input.match(reg)
+  if (parseOut) {
+    return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
   }
 }
 
 function arrayHelper (input) {    // Takes insides of an array excluding []
-  let x = input, commacount, objcount = 0, i = 0
+  let x = input, commacount, objcount = 0
 
-  while (i == 0) {
+  while (true) {
     if (x == '' && (commacount == 0 || commacount == undefined)) {
       return true
-    } else if (value(x) != null && x != '') {
-      x = value(x)
+    } else if (valueParser(x) != null && x != '') {
+      x = valueParser(x)
       objcount += 1
       commacount = 0
     } else if (parseSpace(x) != null && (objcount <= 1)) {
@@ -143,8 +97,9 @@ function arrayHelper (input) {    // Takes insides of an array excluding []
   }
 }
 
-console.log(value('[[1, 2, 3], 12abc'))
-console.log(value('truea'))
-console.log(value('false'))
-console.log(value('null'))
-console.log(parseSpace('null'))
+console.log(parseComma(',,,,    \"rare\"0.23e-falsabc'))
+
+// console.log(valueParser('truea'))
+// console.log(valueParser('false'))
+// console.log(valueParser('null'))
+// console.log(parseSpace('null'))
