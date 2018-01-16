@@ -4,22 +4,19 @@
 
 'use strict'
 
-const valueParser = factoryParser([parseNull, parseBoolean, parseNumber, parseString, parseArray, parseObject])
+const valueParser = factoryParser([/* parseSpace, parseComma, parseColon, */ parseNull, parseBoolean, parseNumber, parseString, /* parseArray, */ parseObject])
 
 function factoryParser (args) {
   return function parser (input) {
-    if (parseSpace(input)) {
-      input = parseSpace(input)[1]
-    }
     for (let x in args) {
       if (args[x](input)) {
-        return args[x](input)[0]
+        return args[x]
       }
     }
   }
 }
 
-console.log(valueParser('    123'))
+// console.log(valueParser('1') == parseNumber)
 
 function parseNull (input) {
   if (input.slice(0, 4) === 'null') {
@@ -36,10 +33,18 @@ function parseBoolean (input) {
 }
 
 function parseString (input) {
-  let reg = /^\"(.*)\"/, parseOut = input.match(reg)
-  if (parseOut) {
-    return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[1].length + 2))
-  } else { return null }
+  let i = 0
+  if (input[i] == '\"') {
+    i++
+    while (input[i] !== '\"') {
+      if (i == input.length) {
+        return null
+      }i++
+    }
+    return ([input.slice(1, i)].concat(input.slice(i + 1)))
+  } else {
+    return null
+  }
 }
 
 function parseNumber (input) {
@@ -50,29 +55,36 @@ function parseNumber (input) {
 }
 
 function parseArray (input) {
-  let reg = /\[(.*)\]/, parseOut = input.match(reg)
-  if (parseOut) {
-    if (arrayHelper(parseOut[1])) {
-      return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
+  let reg = /^\[(.*)\]/, regMatch = input.match(reg), result, commacount = 0, objcount = 0, parseOut = []
+  if (regMatch) {
+    result = regMatch[1]
+    if (result == '') {
+      return [parseOut].concat(input.slice(regMatch[0].length))
+    } else {
+      while (result != '') {
+        if (result[0] == ' ') {
+          result = parseSpace(result)[1]
+        } else if (result[0] == ',' && commacount == 0 && objcount == 1) {
+          result = parseComma(result)[1]
+          commacount += 1, objcount = 0
+        } else if (objcount == 0) {
+          try {
+            console.log(result)
+            result = valueParser(result)(result)
+            parseOut.push(result[0])
+            result = result[1], commacount = 0, objcount += 1
+          } catch (TypeError) { return null }
+        }
+      } return ([parseOut].concat(input.slice(regMatch[0].length)))
     }
   } else { return null }
 }
 
-function parseSpace (input) {
-  let reg = /(^\s+)/, parseOut = input.match(reg)
-  if (parseOut) {
-    return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
-  } else { null }
-}
+console.log(parseArray('[ "a" , "b"]'))
+console.log(parseString('"a" , "b"'))
 
-function parseComma (input) {
-  let reg = /^\,/, parseOut = input.match(reg)
-  if (parseOut) {
-    return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
-  } else { return null }
-}
-
-function arrayHelper (input) {    // validates insides of an array excluding []
+// console.log(valueParser('{"123" : "a"}'))
+/* function arrayHelper (input) {    // validates insides of an array excluding []
   let x = input, commacount, objcount = 0
   while (true) {
     if (x == '' && (commacount == 0 || commacount == undefined)) {
@@ -87,6 +99,23 @@ function arrayHelper (input) {    // validates insides of an array excluding []
       return null
     }
   }
+} */
+
+function parseSpace (input) {
+  let reg = /(^\s+)/, parseOut = input.match(reg)
+  if (parseOut) {
+    return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
+  } else { null }
+}
+
+function parseComma (input) {
+  /* if (input[0] == ' ') {
+    input = parseSpace(input)[1]
+  } */
+  let reg = /^\,/, parseOut = input.match(reg)
+  if (parseOut) {
+    return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
+  } else { return null }
 }
 
 function parseColon (input) {
@@ -124,11 +153,3 @@ function objectHelper (input) {
     } else { return null }
   }
 }
-
-// console.log(parseArray('[123]'))
-// console.log(objectHelper('\"123\": "abc", \"12\": \"1\"'))
-// console.log(parseObject('\"a\"-12.3e '))
-// console.log(valueParser('truea'))
-// console.log(valueParser('false'))
-// console.log(valueParser('null'))
-// console.log(parseSpace('null'))
