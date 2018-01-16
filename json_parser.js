@@ -1,44 +1,25 @@
 /* wrting a json parser to verify it the given input is in valid json format */
 
-// Let's change something to test.
-
 // var jsonParse = (function(){
 
 'use strict'
 
-// const factoryParser = function
+const valueParser = factoryParser([parseNull, parseBoolean, parseNumber, parseString, parseArray, parseObject])
 
 function factoryParser (args) {
   return function parser (input) {
+    if (parseSpace(input)) {
+      input = parseSpace(input)[1]
+    }
     for (let x in args) {
       if (args[x](input)) {
-        return args[x](input)
+        return args[x](input)[0]
       }
     }
   }
 }
-const valueParser = factoryParser([parseSpace, parseNull, parseBoolean, parseNumber, parseString, parseArray, parseObject])
 
-console.log(valueParser('"my name"'))
-
-/*
-const valueParser = function (input) {
-  if (input[0] == 'n') {
-    return parseNull(input)
-  } else if (input[0] == 't' || input[0] == 'f') {
-    return parseBoolean(input)
-  } else if (input[0] == '\"') {
-    return parseString(input)
-  } else if ((input[0] == '-' && input[1] > 0) || input[0] > 0) {
-    return parseNumber(input)
-  } else if (input[0] == '[') {
-    return parseArray(input)
-  } else if (input[0] == '{') {
-    return parseObject(input)
-  } else {
-    return null
-  }
-} */
+console.log(valueParser('    123'))
 
 function parseNull (input) {
   if (input.slice(0, 4) === 'null') {
