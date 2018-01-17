@@ -4,7 +4,7 @@
 
 'use strict'
 
-const valueParser = factoryParser([/* parseSpace, parseComma, parseColon, */ parseNull, parseBoolean, parseNumber, parseString, /* parseArray, */ parseObject])
+const valueParser = factoryParser([parseNull, parseBoolean, parseNumber, parseString, parseArray, parseObject])
 
 function factoryParser (args) {
   return function parser (input) {
@@ -15,8 +15,6 @@ function factoryParser (args) {
     }
   }
 }
-
-// console.log(valueParser('1') == parseNumber)
 
 function parseNull (input) {
   if (input.slice(0, 4) === 'null') {
@@ -33,9 +31,8 @@ function parseBoolean (input) {
 }
 
 function parseString (input) {
-  let i = 0
-  if (input[i] == '\"') {
-    i++
+  let i = 1
+  if (input[i - 1] == '\"') {
     while (input[i] !== '\"') {
       if (i == input.length) {
         return null
@@ -48,14 +45,14 @@ function parseString (input) {
 }
 
 function parseNumber (input) {
-  let reg = /^(\-?\d+(\.\d+)?([eE][+-]?\d+)?)/, parseOut = input.match(reg)// console.log(parseOut[0])
+  let reg = /^(\-?\d+(\.\d+)?([eE][+-]?\d+)?)/, parseOut = input.match(reg)
   if (parseOut) {
     return [parseOut[0]].concat(input.slice(parseOut[0].length))
   } else { return parseOut }
 }
 
 function parseArray (input) {
-  let result = input, commacount = 0, objcount = 0, parseOut = [], i
+  let result = input, commacount = 0, objcount = 0, parseOut = []
   if (result[0] !== '[') {
     return null
   } else {
@@ -63,10 +60,17 @@ function parseArray (input) {
     while (result[0] !== ']') {
       if (result[0] == ' ') {
         result = parseSpace(result)[1]
+      } else if (objcount == 0) {
+        try {
+          result = valueParser(result)(result)
+          parseOut.push(result[0]), result = result[1], commacount = 0, objcount += 1
+        } catch (TypeError) { return null }
       } else if (result[0] == ',' && commacount == 0 && objcount == 1) {
         result = parseComma(result)[1]
         commacount += 1, objcount = 0
-      } else if (objcount == 0) {
+        if (result[0] == ' ') {
+          result = parseSpace(result)[1]
+        }
         try {
           result = valueParser(result)(result)
           parseOut.push(result[0]), result = result[1], commacount = 0, objcount += 1
@@ -76,54 +80,6 @@ function parseArray (input) {
   }
 }
 
-  /* let reg = /^\[(.*)\]/, regMatch = input.match(reg), result, commacount = 0, objcount = 0, parseOut = []
-  if (regMatch) {
-    result = regMatch[1]
-    if (result == '') {
-      return [parseOut].concat(input.slice(regMatch[0].length))
-    } else {
-      while (result != '') {
-        if (result[0] == ' ') {
-          result = parseSpace(result)[1]
-        } else if (result[0] == ',' && commacount == 0 && objcount == 1) {
-          result = parseComma(result)[1]
-          commacount += 1, objcount = 0
-        } else if (objcount == 0) {
-          try {
-            console.log(result)
-            result = valueParser(result)(result)
-            parseOut.push(result[0])
-            result = result[1], commacount = 0, objcount += 1
-          } catch (TypeError) { return null }
-        }
-      } return ([parseOut].concat(input.slice(regMatch[0].length)))
-    }
-  } else { return null }
-} */
-
-console.log(parseArray('[ "a" , "b"]'))
-console.log(parseArray('[ "a" ,, "b"]'))
-console.log(parseArray('[ "a" 1 , "b"]'))
-console.log(parseArray('[ "a" , "b"]]'))
-// console.log(valueParser('"a" , "b" ]')('"a" , "b" ]'))
-// console.log(valueParser('{"123" : "a"}'))
-/* function arrayHelper (input) {    // validates insides of an array excluding []
-  let x = input, commacount, objcount = 0
-  while (true) {
-    if (x == '' && (commacount == 0 || commacount == undefined)) {
-      return true
-    } else if (valueParser(x)) {
-      x = valueParser(x)[1], objcount += 1, commacount = 0
-    } else if (parseSpace(x) && (objcount <= 1)) {
-      x = parseSpace(x)[1]// console.log('was in space')
-    } else if (parseComma(x) && objcount == 1 && commacount == 0) {
-      x = parseComma(x)[1], commacount = 1, objcount = 0
-    } else {
-      return null
-    }
-  }
-} */
-
 function parseSpace (input) {
   let reg = /(^\s+)/, parseOut = input.match(reg)
   if (parseOut) {
@@ -132,9 +88,6 @@ function parseSpace (input) {
 }
 
 function parseComma (input) {
-  /* if (input[0] == ' ') {
-    input = parseSpace(input)[1]
-  } */
   let reg = /^\,/, parseOut = input.match(reg)
   if (parseOut) {
     return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
@@ -149,30 +102,53 @@ function parseColon (input) {
 }
 
 function parseObject (input) {
-  let reg = /\{(.*)\}/, parseOut = input.match(reg)
-  if (parseOut) {
-    if (objectHelper(parseOut[1])) {
-      return [parseOut[0]].concat(input.slice(parseOut[0].length))
-    }
-  } else { return null }
-}
-
-function objectHelper (input) {
-  let x = input, commacount = 0, coloncount = 0, keycount = 0, valuecount = 0
-  while (true) {
-    console.log(x, commacount, coloncount, keycount, valuecount)
-    if (x === '' && ((keycount && coloncount && valuecount && !commacount) || (!keycount && !coloncount && !valuecount && !commacount))) {
-      return true
-    } else if (parseSpace(x)) {
-      x = parseSpace(x)[1]
-    } else if (parseString(x) && !keycount) {
-      x = parseString(x)[1], keycount += 1, commacount = 0, coloncount = 0, valuecount = 0
-    } else if (parseColon(x) && keycount && !valuecount && !coloncount && !commacount) {
-      x = parseColon(x)[1], coloncount += 1
-    } else if (valueParser(x) && keycount && coloncount) {
-      x = valueParser(x)[1], valuecount += 1
-    } else if (parseComma(x) && keycount && coloncount && valuecount) {
-      x = parseComma(x)[1], commacount += 1, keycount = 0
-    } else { return null }
+  let result = input, r1, r2, parseOut = {}, commacount = 1
+  if (input[0] !== '{') {
+    return null
+  } else {
+    result = result.substr(1)
+    while (result[0] !== '}') {
+      if (result[0] == ' ') {
+        result = parseSpace(result)[1]
+      } else if (commacount == 1) {
+        try {
+          result = parseString(result), r1 = result[0]
+          result = result[1], commacount = 0
+          if (result[0] == ' ') {
+            result = parseSpace(result)[1]
+          }
+          if (result[0] == ':') {
+            result = parseColon(result)[1]
+            if (result[0] == ' ') {
+              result = parseSpace(result)[1]
+            }
+            try {
+              result = valueParser(result)(result), r2 = result[0]
+              result = result[1], parseOut[r1] = r2
+            } catch (TypeError) { return null }
+            if (result[0] == ' ') {
+              result = parseSpace(result)[1]
+            }
+            if (result[0] == ',') {
+              result = parseComma(result)[1], commacount = 1
+              if (result[0] == ' ') {
+                result = parseSpace(result)[1]
+              }
+              if (result[0] !== '"') { return null }
+            } else { continue }
+          } else { return null }
+        } catch (TypeError) { return null }
+      } else { return null }
+    } return [parseOut].concat(result.substr(1))
   }
 }
+
+/*
+console.log(parseArray('[ "a" , "b"]'))
+console.log(parseArray('[ "a" ,, "b"]'))
+console.log(parseArray('[ "a" 1 , "b"]'))
+console.log(parseArray('[ "a" , "b"]]'))
+console.log(parseArray('[ "a" ,]'))
+console.log(parseArray('[ "a" , ["b"]]'))
+console.log(parseArray('[ ]'))
+*/
