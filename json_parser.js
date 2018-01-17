@@ -2,8 +2,6 @@
 
 // var jsonParse = (function(){
 
-'use strict'
-
 const valueParser = factoryParser([parseNull, parseBoolean, parseNumber, parseString, parseArray, parseObject])
 
 function factoryParser (args) {
@@ -12,7 +10,7 @@ function factoryParser (args) {
       if (x(input)) {
         return x
       }
-    }
+    } return null
   }
 }
 
@@ -43,41 +41,44 @@ function parseString (input) {
     return null
   }
 }
+// console.log(parseString('"abc""def"'))
 
 function parseNumber (input) {
   let reg = /^(\-?\d+(\.\d+)?([eE][+-]?\d+)?)/, parseOut = input.match(reg)
   if (parseOut) {
-    return [parseOut[0]].concat(input.slice(parseOut[0].length))
+    return [Number(parseOut[0])].concat(input.slice(parseOut[0].length))
   } else { return parseOut }
 }
 
 function parseArray (input) {
-  let result = input, commacount = 0, objcount = 0, parseOut = []
+  let result = input, parseOut = []
   if (result[0] !== '[') {
     return null
-  } else {
-    result = result.substr(1)
-    while (result[0] !== ']') {
-      if (result[0] == ' ') {
-        result = parseSpace(result)[1]
-      } else if (objcount == 0) {
-        try {
-          result = valueParser(result)(result)
-          parseOut.push(result[0]), result = result[1], commacount = 0, objcount += 1
-        } catch (TypeError) { return null }
-      } else if (result[0] == ',' && commacount == 0 && objcount == 1) {
-        result = parseComma(result)[1]
-        commacount += 1, objcount = 0
+  }
+  result = result.substr(1)
+  while (result[0] !== ']') {
+    if (result[0] == ' ') {
+      result = parseSpace(result)[1]
+    } else {
+      try {
+        result = valueParser(result)(result)
+        parseOut.push(result[0])
+        result = result[1]
         if (result[0] == ' ') {
           result = parseSpace(result)[1]
         }
-        try {
-          result = valueParser(result)(result)
-          parseOut.push(result[0]), result = result[1], commacount = 0, objcount += 1
-        } catch (TypeError) { return null }
-      } else { return null }
-    } return [parseOut].concat(result.substr(1))
-  }
+        if (result[0] == ',') {
+          result = parseComma(result)[1]
+          if (result[0] == ' ') {
+            result = parseSpace(result)[1]
+          }
+          if (valueParser(result) !== null) {
+            continue
+          } else { return null }
+        }
+      } catch (TypeError) { return null }
+    }
+  } return [parseOut].concat(result.substr(1))
 }
 
 function parseSpace (input) {
@@ -87,14 +88,14 @@ function parseSpace (input) {
   } else { null }
 }
 
-function parseComma (input) {
+function parseComma (input) {  // don't really need this
   let reg = /^\,/, parseOut = input.match(reg)
   if (parseOut) {
     return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
   } else { return null }
 }
 
-function parseColon (input) {
+function parseColon (input) { // don't really need this
   let reg = /^\:/, parseOut = input.match(reg)
   if (parseOut) {
     return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
@@ -102,53 +103,55 @@ function parseColon (input) {
 }
 
 function parseObject (input) {
-  let result = input, r1, r2, parseOut = {}, commacount = 1
+  let result = input, r1, r2, parseOut = {}
   if (input[0] !== '{') {
     return null
-  } else {
-    result = result.substr(1)
-    while (result[0] !== '}') {
-      if (result[0] == ' ') {
-        result = parseSpace(result)[1]
-      } else if (commacount == 1) {
-        try {
-          result = parseString(result), r1 = result[0]
-          result = result[1], commacount = 0
+  }
+  result = result.substr(1)
+  while (result[0] !== '}') {
+    if (result[0] == ' ') {
+      result = parseSpace(result)[1]
+    } else {
+      try {
+        result = parseString(result), r1 = result[0]
+        result = result[1], commacount = 0
+        if (result[0] == ' ') {
+          result = parseSpace(result)[1]
+        }
+        if (result[0] == ':') {
+          result = parseColon(result)[1]
           if (result[0] == ' ') {
             result = parseSpace(result)[1]
           }
-          if (result[0] == ':') {
-            result = parseColon(result)[1]
+          // try {
+          result = valueParser(result)(result), r2 = result[0]
+          result = result[1], parseOut[r1] = r2
+          // } catch (TypeError) { return null }
+          if (result[0] == ' ') {
+            result = parseSpace(result)[1]
+          }
+          if (result[0] == ',') {
+            result = parseComma(result)[1]
             if (result[0] == ' ') {
               result = parseSpace(result)[1]
             }
-            try {
-              result = valueParser(result)(result), r2 = result[0]
-              result = result[1], parseOut[r1] = r2
-            } catch (TypeError) { return null }
-            if (result[0] == ' ') {
-              result = parseSpace(result)[1]
+            if (result[0] == ']') {
+              return null
             }
-            if (result[0] == ',') {
-              result = parseComma(result)[1], commacount = 1
-              if (result[0] == ' ') {
-                result = parseSpace(result)[1]
-              }
-              if (result[0] !== '"') { return null }
-            } else { continue }
-          } else { return null }
-        } catch (TypeError) { return null }
-      } else { return null }
-    } return [parseOut].concat(result.substr(1))
-  }
+            if (result[0] !== '"') { return null }
+          } else { continue }
+        } else { return null }
+      } catch (TypeError) { return null }
+    }
+  } return [parseOut].concat(result.substr(1))
 }
 
+console.log(parseObject('{"": 1}abcd'))
 /*
-console.log(parseArray('[ "a" , "b"]'))
+console.log(parseObject('{ "a" : }'))
 console.log(parseArray('[ "a" ,, "b"]'))
 console.log(parseArray('[ "a" 1 , "b"]'))
 console.log(parseArray('[ "a" , "b"]]'))
 console.log(parseArray('[ "a" ,]'))
 console.log(parseArray('[ "a" , ["b"]]'))
-console.log(parseArray('[ ]'))
-*/
+console.log(parseArray('[ ]')) */
