@@ -3,7 +3,7 @@
 const valueParser = factoryParser([parseNull, parseBoolean, parseNumber, parseString, parseArray, parseObject])
 
 function factoryParser (args) {
-  return function parser (input) {
+  return function (input) {
     for (let x of args) {
       if (x(input)) {
         return x
@@ -15,7 +15,8 @@ function factoryParser (args) {
 function parseNull (input) {
   if (input.substr(0, 4) === 'null') {
     return [null, input.substr(4)]
-  } else { return null }
+  }
+  return null
 }
 
 function parseBoolean (input) {
@@ -38,20 +39,18 @@ function parseString (input) {
       parseOut += input[0]
       input = input.substr(1)
     }
-    parseOut = [parseOut]
-    parseOut.push(input.substr(1))
-    return (parseOut)
-  } else {
-    return null
+    return [parseOut, input.substr(1)]
   }
+  return null
 }
 // console.log(parseString('"abc""def"'))
 
 function parseNumber (input) {
   let reg = /^(\-?\d+(\.\d+)?([eE][+-]?\d+)?)/, parseOut = input.match(reg)
   if (parseOut) {
-    return [Number(parseOut[0])].concat(input.slice(parseOut[0].length))
-  } else { return parseOut }
+    return [Number(parseOut[0]), input.slice(parseOut[0].length)]
+  }
+  return null
 }
 
 function parseArray (input) {
@@ -88,22 +87,25 @@ function parseArray (input) {
 function parseSpace (input) {
   let reg = /(^\s+)/, parseOut = input.match(reg)
   if (parseOut) {
-    return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
-  } else { null }
+    return [parseOut[0], input.slice(parseOut[0].length)]
+  }
+  return null
 }
 
 function parseComma (input) {  // don't really need this
   let reg = /^\,/, parseOut = input.match(reg)
   if (parseOut) {
-    return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
-  } else { return null }
+    return [parseOut[0], input.slice(parseOut[0].length)]
+  }
+  return null
 }
 
 function parseColon (input) { // don't really need this
   let reg = /^\:/, parseOut = input.match(reg)
   if (parseOut) {
-    return [input.slice(0, parseOut[0].length)].concat(input.slice(parseOut[0].length))
-  } else { return null }
+    return [parseOut[0], input.slice(parseOut[0].length)]
+  }
+  return null
 }
 
 function parseObject (input) {
