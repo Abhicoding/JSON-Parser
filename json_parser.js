@@ -8,9 +8,9 @@ const valueParser = factoryParser([/* parseSpace, parseComma, parseColon, */ par
 
 function factoryParser (args) {
   return function parser (input) {
-    for (let x in args) {
-      if (args[x](input)) {
-        return args[x]
+    for (let x of args) {
+      if (x(input)) {
+        return x
       }
     }
   }
@@ -55,7 +55,28 @@ function parseNumber (input) {
 }
 
 function parseArray (input) {
-  let reg = /^\[(.*)\]/, regMatch = input.match(reg), result, commacount = 0, objcount = 0, parseOut = []
+  let result = input, commacount = 0, objcount = 0, parseOut = [], i
+  if (result[0] !== '[') {
+    return null
+  } else {
+    result = result.substr(1)
+    while (result[0] !== ']') {
+      if (result[0] == ' ') {
+        result = parseSpace(result)[1]
+      } else if (result[0] == ',' && commacount == 0 && objcount == 1) {
+        result = parseComma(result)[1]
+        commacount += 1, objcount = 0
+      } else if (objcount == 0) {
+        try {
+          result = valueParser(result)(result)
+          parseOut.push(result[0]), result = result[1], commacount = 0, objcount += 1
+        } catch (TypeError) { return null }
+      } else { return null }
+    } return [parseOut].concat(result.substr(1))
+  }
+}
+
+  /* let reg = /^\[(.*)\]/, regMatch = input.match(reg), result, commacount = 0, objcount = 0, parseOut = []
   if (regMatch) {
     result = regMatch[1]
     if (result == '') {
@@ -78,11 +99,13 @@ function parseArray (input) {
       } return ([parseOut].concat(input.slice(regMatch[0].length)))
     }
   } else { return null }
-}
+} */
 
 console.log(parseArray('[ "a" , "b"]'))
-console.log(parseString('"a" , "b"'))
-
+console.log(parseArray('[ "a" ,, "b"]'))
+console.log(parseArray('[ "a" 1 , "b"]'))
+console.log(parseArray('[ "a" , "b"]]'))
+// console.log(valueParser('"a" , "b" ]')('"a" , "b" ]'))
 // console.log(valueParser('{"123" : "a"}'))
 /* function arrayHelper (input) {    // validates insides of an array excluding []
   let x = input, commacount, objcount = 0
