@@ -152,8 +152,6 @@ function parseObject (input) {
   } return [parseOut].concat(result.substr(1))
 }
 
-// console.log(parseObject('{"": 1}abcd'))
-/*
 const readline = require('readline')
 const log = console.log
 
@@ -172,7 +170,7 @@ var recursiveAsyncReadLine = function () {
 }
 
 recursiveAsyncReadLine() // we have to actually start our recursion somehow
-*/
+
 const jsonParse = function (input) {
   let x
   // console.log(valueParser(input), typeof (input), input)
@@ -190,10 +188,11 @@ const jsonParse = function (input) {
 console.log(jsonParse("'1234'"))
 // console.log(jsonParse('[1,2]]'))
 
-// console.log(parseObject('{ "a" : }'))
+console.log(parseObject('{ "a" : }'))
 console.log(parseArray('[ "a" ,, "b"]'))
 console.log(parseArray('[ "a" 1 , "b"]'))
 console.log(parseArray('[ "a" , "b"]]'))
 console.log(parseArray('[ "a" ,]'))
 console.log(parseArray('[ "a" , ["b"]]'))
 console.log(parseArray('[ ]'))
+// console.log(parseObject('{"": 1}abcd'))
