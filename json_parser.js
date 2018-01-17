@@ -13,28 +13,34 @@ function factoryParser (args) {
 }
 
 function parseNull (input) {
-  if (input.slice(0, 4) === 'null') {
-    return [input.slice(0, 4)].concat(input.slice(4))
+  if (input.substr(0, 4) === 'null') {
+    return [null, input.substr(4)]
   } else { return null }
 }
 
 function parseBoolean (input) {
-  if (input.slice(0, 4) === 'true') {
-    return [input.slice(0, 4)].concat(input.slice(4))
-  } else if (input.slice(0, 5) === 'false') {
-    return [input.slice(0, 5)].concat(input.slice(5))
-  } else { return null }
+  if (input.substr(0, 4) === 'true') {
+    return [true, input.substr(4)]
+  } else if (input.substr(0, 5) === 'false') {
+    return [false, input.substr(4)]
+  }
+  return null
 }
 
 function parseString (input) {
-  let i = 1
-  if (input[i - 1] == '\"') {
-    while (input[i] !== '\"') {
-      if (i == input.length) {
+  let parseOut = ''
+  if (input[0] == '\"') {
+    input = input.substr(1)
+    while (input[0] !== '\"') {
+      if (input == '') {
         return null
-      }i++
+      }
+      parseOut += input[0]
+      input = input.substr(1)
     }
-    return ([input.slice(1, i)].concat(input.slice(i + 1)))
+    parseOut = [parseOut]
+    parseOut.push(input.substr(1))
+    return (parseOut)
   } else {
     return null
   }
@@ -58,23 +64,23 @@ function parseArray (input) {
     if (result[0] == ' ') {
       result = parseSpace(result)[1]
     } else {
-      try {
-        result = valueParser(result)(result)
-        parseOut.push(result[0])
-        result = result[1]
+      // try {
+      result = valueParser(result)(result)
+      parseOut.push(result[0])
+      result = result[1]
+      if (result[0] == ' ') {
+        result = parseSpace(result)[1]
+      }
+      if (result[0] == ',') {
+        result = parseComma(result)[1]
         if (result[0] == ' ') {
           result = parseSpace(result)[1]
         }
-        if (result[0] == ',') {
-          result = parseComma(result)[1]
-          if (result[0] == ' ') {
-            result = parseSpace(result)[1]
-          }
-          if (valueParser(result) !== null) {
-            continue
-          } else { return null }
-        }
-      } catch (TypeError) { return null }
+        if (valueParser(result) !== null) {
+          continue
+        } else { return null }
+      }
+      // } catch (TypeError) { return null }
     }
   } return [parseOut].concat(result.substr(1))
 }
@@ -144,10 +150,30 @@ function parseObject (input) {
   } return [parseOut].concat(result.substr(1))
 }
 
-console.log(parseObject('{"": 1}abcd'))
+// console.log(parseObject('{"": 1}abcd'))
+/*
+const readline = require('readline')
+const log = console.log
 
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+})
+
+var recursiveAsyncReadLine = function () {
+  rl.question('Enter a valid JSON input: ', function (answer) {
+    if (answer == 'exit') // we need some base case, for recursion
+      { return rl.close() } // closing RL and returning from function.
+    console.log(jsonParse(answer))
+    recursiveAsyncReadLine() // Calling this function again to ask new question
+  })
+}
+
+recursiveAsyncReadLine() // we have to actually start our recursion somehow
+*/
 const jsonParse = function (input) {
   let x
+  // console.log(valueParser(input), typeof (input), input)
   if (valueParser(input) !== null) {
     x = valueParser(input)(input)
     if (x[1] === '') {
@@ -156,16 +182,16 @@ const jsonParse = function (input) {
       console.log("Error: couldn't parse completely due to invalid JSON :")
       return x
     }
-  } console.log('Error: Invalid JSON ')
-  return x
+  } return 'Error: Invalid JSON ' + input
 }
 
-console.log(jsonParse('[1,2]]'))
-/*
-console.log(parseObject('{ "a" : }'))
+console.log(jsonParse("'1234'"))
+// console.log(jsonParse('[1,2]]'))
+
+// console.log(parseObject('{ "a" : }'))
 console.log(parseArray('[ "a" ,, "b"]'))
 console.log(parseArray('[ "a" 1 , "b"]'))
 console.log(parseArray('[ "a" , "b"]]'))
 console.log(parseArray('[ "a" ,]'))
 console.log(parseArray('[ "a" , ["b"]]'))
-console.log(parseArray('[ ]')) */
+console.log(parseArray('[ ]'))
