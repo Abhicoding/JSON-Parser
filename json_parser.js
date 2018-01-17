@@ -1,7 +1,5 @@
 /* wrting a json parser to verify it the given input is in valid json format */
 
-// var jsonParse = (function(){
-
 const valueParser = factoryParser([parseNull, parseBoolean, parseNumber, parseString, parseArray, parseObject])
 
 function factoryParser (args) {
@@ -147,6 +145,22 @@ function parseObject (input) {
 }
 
 console.log(parseObject('{"": 1}abcd'))
+
+const jsonParse = function (input) {
+  let x
+  if (valueParser(input) !== null) {
+    x = valueParser(input)(input)
+    if (x[1] === '') {
+      return x[0]
+    } else {
+      console.log("Error: couldn't parse completely due to invalid JSON :")
+      return x
+    }
+  } console.log('Error: Invalid JSON ')
+  return x
+}
+
+console.log(jsonParse('[1,2]]'))
 /*
 console.log(parseObject('{ "a" : }'))
 console.log(parseArray('[ "a" ,, "b"]'))
