@@ -23,7 +23,7 @@ function parseBoolean (input) {
   if (input.substr(0, 4) === 'true') {
     return [true, input.substr(4)]
   } else if (input.substr(0, 5) === 'false') {
-    return [false, input.substr(4)]
+    return [false, input.substr(5)]
   }
   return null
 }
@@ -36,6 +36,10 @@ function parseString (input) {
       if (input == '') {
         return null
       }
+      if (input[0] == '\\'){
+        parseOut += input.substr(0, 2)
+        input = input.substr(2)
+      }
       parseOut += input[0]
       input = input.substr(1)
     }
@@ -43,7 +47,6 @@ function parseString (input) {
   }
   return null
 }
-// console.log(parseString('"abc""def"'))
 
 function parseNumber (input) {
   let reg = /^(\-?\d+(\.\d+)?([eE][+-]?\d+)?)/, parseOut = input.match(reg)
@@ -60,32 +63,31 @@ function parseArray (input) {
   }
   result = result.substr(1)
   while (result[0] !== ']') {
-    if (result[0] == ' ') {
+    if (parseSpace(result) !== null) {
       result = parseSpace(result)[1]
+      //console.log(result)
     } else {
-      // try {
       result = valueParser(result)(result)
       parseOut.push(result[0])
       result = result[1]
-      if (result[0] == ' ') {
+      if (parseSpace(result) !== null) {
         result = parseSpace(result)[1]
       }
       if (result[0] == ',') {
         result = parseComma(result)[1]
-        if (result[0] == ' ') {
+        if (parseSpace(result) !== null) {
           result = parseSpace(result)[1]
         }
         if (valueParser(result) !== null) {
           continue
         } else { return null }
       }
-      // } catch (TypeError) { return null }
     }
   } return [parseOut].concat(result.substr(1))
 }
 
 function parseSpace (input) {
-  let reg = /(^\s+)/, parseOut = input.match(reg)
+  let reg = /(^[\s\t\n\r]+)/, parseOut = input.match(reg)
   if (parseOut) {
     return [parseOut[0], input.slice(parseOut[0].length)]
   }
@@ -115,30 +117,28 @@ function parseObject (input) {
   }
   result = result.substr(1)
   while (result[0] !== '}') {
-    if (result[0] == ' ') {
+    if (parseSpace(result) !== null) {
       result = parseSpace(result)[1]
     } else {
       try {
         result = parseString(result), r1 = result[0]
         result = result[1], commacount = 0
-        if (result[0] == ' ') {
+        if (parseSpace(result) !== null) {
           result = parseSpace(result)[1]
         }
         if (result[0] == ':') {
           result = parseColon(result)[1]
-          if (result[0] == ' ') {
+          if (parseSpace(result) !== null) {
             result = parseSpace(result)[1]
           }
-          // try {
           result = valueParser(result)(result), r2 = result[0]
           result = result[1], parseOut[r1] = r2
-          // } catch (TypeError) { return null }
-          if (result[0] == ' ') {
+          if (parseSpace(result) !== null) {
             result = parseSpace(result)[1]
           }
           if (result[0] == ',') {
             result = parseComma(result)[1]
-            if (result[0] == ' ') {
+            if (parseSpace(result) !== null) {
               result = parseSpace(result)[1]
             }
             if (result[0] == ']') {
@@ -149,50 +149,40 @@ function parseObject (input) {
         } else { return null }
       } catch (TypeError) { return null }
     }
-  } return [parseOut].concat(result.substr(1))
+  } 
+  return [parseOut].concat(result.substr(1))
 }
-
-const readline = require('readline')
-const log = console.log
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-})
-
-var recursiveAsyncReadLine = function () {
-  rl.question('Enter a valid JSON input: ', function (answer) {
-    if (answer == 'exit') // we need some base case, for recursion
-      { return rl.close() } // closing RL and returning from function.
-    console.log(jsonParse(answer))
-    recursiveAsyncReadLine() // Calling this function again to ask new question
-  })
-}
-
-recursiveAsyncReadLine() // we have to actually start our recursion somehow
 
 const jsonParse = function (input) {
   let x
-  // console.log(valueParser(input), typeof (input), input)
+  if(parseSpace(input) !== null){
+    input = parseSpace(input)[1]
+  }
   if (valueParser(input) !== null) {
     x = valueParser(input)(input)
+    if(parseSpace(x[1]) !== null){
+      let y = parseSpace(x[1])
+      x = [x[0], y[1]]
+    }
     if (x[1] === '') {
       return x[0]
     } else {
       console.log("Error: couldn't parse completely due to invalid JSON :")
       return x
     }
-  } return 'Error: Invalid JSON ' + input
+  } return 'Error: Invalid JSON '
 }
 
-console.log(jsonParse("'1234'"))
-// console.log(jsonParse('[1,2]]'))
 
-console.log(parseObject('{ "a" : }'))
+exports.parse = jsonParse
+
+//console.log(parseObject('{"favorited" : false}'))
+//console.log(parseString('"abc\\\"c"d"'))
+//console.log(parseObject('{ "a" : }'))
+/*
 console.log(parseArray('[ "a" ,, "b"]'))
 console.log(parseArray('[ "a" 1 , "b"]'))
 console.log(parseArray('[ "a" , "b"]]'))
 console.log(parseArray('[ "a" ,]'))
 console.log(parseArray('[ "a" , ["b"]]'))
-console.log(parseArray('[ ]'))
-// console.log(parseObject('{"": 1}abcd'))
+console.log(parseArray('[["created_at", "Thu Jun 22 21:00:00 +0000 2017"]]'))*/
