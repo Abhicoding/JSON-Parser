@@ -8,7 +8,8 @@ function factoryParser (args) {
       if (x(input)) {
         return x
       }
-    } return null
+    }
+     return null
   }
 }
 
@@ -29,9 +30,9 @@ function parseBoolean (input) {
 }
 
 function parseString (input) {
-  let parseOut = ''
   if (input[0] == '\"') {
     input = input.substr(1)
+    let parseOut = ''
     while (input[0] !== '\"') {
       if (input == '') {
         return null
@@ -57,33 +58,35 @@ function parseNumber (input) {
 }
 
 function parseArray (input) {
-  let result = input, parseOut = []
-  if (result[0] !== '[') {
-    return null
-  }
-  result = result.substr(1)
-  while (result[0] !== ']') {
-    if (parseSpace(result) !== null) {
-      result = parseSpace(result)[1]
-      //console.log(result)
-    } else {
-      result = valueParser(result)(result)
-      parseOut.push(result[0])
-      result = result[1]
+  if (input[0] == '[') {
+    let result = input, parseOut = []
+    result = result.substr(1)
+    while (result[0] !== ']') {
       if (parseSpace(result) !== null) {
         result = parseSpace(result)[1]
-      }
-      if (result[0] == ',') {
-        result = parseComma(result)[1]
+      } else {
+        if (valueParser(result) !== null){
+          result = valueParser(result)(result)
+          parseOut.push(result[0])
+          result = result[1]
+        }else{
+          return null
+        }
         if (parseSpace(result) !== null) {
           result = parseSpace(result)[1]
         }
-        if (valueParser(result) !== null) {
-          continue
-        } else { return null }
+        if (result[0] == ',') {
+          result = parseComma(result)[1]
+          if (parseSpace(result) !== null) {
+            result = parseSpace(result)[1]
+          }
+          if (valueParser(result) !== null) {
+            continue
+          } else { return null }
+        }
       }
-    }
-  } return [parseOut].concat(result.substr(1))
+    } return [parseOut].concat(result.substr(1))
+  } return null
 }
 
 function parseSpace (input) {
@@ -111,46 +114,48 @@ function parseColon (input) { // don't really need this
 }
 
 function parseObject (input) {
-  let result = input, r1, r2, parseOut = {}
-  if (input[0] !== '{') {
-    return null
-  }
-  result = result.substr(1)
-  while (result[0] !== '}') {
-    if (parseSpace(result) !== null) {
-      result = parseSpace(result)[1]
-    } else {
-      try {
-        result = parseString(result), r1 = result[0]
-        result = result[1], commacount = 0
-        if (parseSpace(result) !== null) {
-          result = parseSpace(result)[1]
-        }
-        if (result[0] == ':') {
-          result = parseColon(result)[1]
+  if (input[0] == '{') {
+    let result = input, r1, r2, parseOut = {}
+    result = result.substr(1)
+    while (result[0] !== '}') {
+      if (parseSpace(result) !== null) {
+        result = parseSpace(result)[1]
+      } else {
+        if (parseString(result) !== null){
+          result = parseString(result), r1 = result[0]
+          result = result[1], commacount = 0
           if (parseSpace(result) !== null) {
             result = parseSpace(result)[1]
           }
-          result = valueParser(result)(result), r2 = result[0]
-          result = result[1], parseOut[r1] = r2
-          if (parseSpace(result) !== null) {
-            result = parseSpace(result)[1]
-          }
-          if (result[0] == ',') {
-            result = parseComma(result)[1]
+          if (result[0] == ':') {
+            result = parseColon(result)[1]
             if (parseSpace(result) !== null) {
               result = parseSpace(result)[1]
             }
-            if (result[0] == ']') {
+            if(valueParser(result) !== null){
+              result = valueParser(result)(result), r2 = result[0]
+              result = result[1], parseOut[r1] = r2
+            }else{
               return null
             }
-            if (result[0] !== '"') { return null }
-          } else { continue }
+            if (parseSpace(result) !== null) {
+              result = parseSpace(result)[1]
+            }
+            if (result[0] == ',') {
+              result = parseComma(result)[1]
+              if (parseSpace(result) !== null) {
+                result = parseSpace(result)[1]
+              }
+              if (result[0] == ']') {
+                return null
+              }
+              if (result[0] !== '"') { return null }
+            } else { continue }
+          } else { return null }
         } else { return null }
-      } catch (TypeError) { return null }
-    }
-  } 
-  return [parseOut].concat(result.substr(1))
+      }
+    } return [parseOut].concat(result.substr(1))
+  } return null
 }
 
 const jsonParse = function (input) {
@@ -173,8 +178,9 @@ const jsonParse = function (input) {
   } return 'Error: Invalid JSON '
 }
 
-
 exports.parse = jsonParse
+
+
 
 //console.log(parseObject('{"favorited" : false}'))
 //console.log(parseString('"abc\\\"c"d"'))

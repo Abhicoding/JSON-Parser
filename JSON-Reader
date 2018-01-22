@@ -1,9 +1,0 @@
-var parser = require('./json_parser') 
-
-//console.log(parser.parse('true'))
-var fs = require("fs");
-
-fs.readFile("-2.js", 'utf-8', function (err, data) {
-    if (err) throw err;
-    console.log(parser.parse(data));
-});
