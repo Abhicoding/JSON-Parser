@@ -1,4 +1,4 @@
-/* wrting a json parser to verify it the given input is in valid json format */
+/* A json parser to verify if the given input is in valid json format */
 
 const valueParser = factoryParser(parseNull, parseBoolean, parseNumber, parseString, parseArray, parseObject)
 
@@ -92,13 +92,8 @@ function parseObject (input) {
 }
 
 const jsonParse = function (input) {
-  if(parseSpace(input) !== null) input = parseSpace(input)[1]
   if (valueParser(input) !== null) {
     var x = valueParser(input)(input)
-    if(parseSpace(x[1]) !== null){
-      var y = parseSpace(x[1])
-      x = [x[0], y[1]]
-    }
     if (x[1] === '') return x[0]
     return x
   } return 'Error: Invalid JSON '
